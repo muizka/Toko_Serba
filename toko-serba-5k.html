@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog Serba 5K</title>
+    <!-- Menggunakan Tailwind CSS untuk tampilan yang bagus dan responsif -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Gaya tambahan untuk mempercantik */
+        .product-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans pb-20">
+
+    <!-- HEADER / BANNER -->
+    <header class="bg-red-600 text-white text-center py-8 px-4 shadow-md">
+        <h1 class="text-3xl font-bold tracking-wide">📦 TOKO SERBA 5.000</h1>
+        <p class="text-sm mt-2 opacity-90">Semua Produk Rp 5.000, Ada yang Diskon Juga! Tanpa Ribet, Langsung Pilih & Pesan.</p>
+    </header>
+
+    <!-- AREA UTAMA -->
+    <main class="max-w-6xl mx-auto px-4 mt-6">
+
+        <!-- Filter Kategori Klien -->
+        <div class="flex gap-2 overflow-x-auto pb-3 mb-6" id="category-filters">
+            <button onclick="filterKategori('Semua')" class="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow shrink-0 cursor-pointer">Semua</button>
+            <!-- Kategori lain akan muncul otomatis di sini -->
+        </div>
+
+        <!-- DAFTAR PRODUK -->
+        <div id="product-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Produk akan di-render oleh JavaScript -->
+        </div>
+    </main>
+
+    <!-- FOOTER & TOMBOL ADMIN -->
+    <footer class="text-center text-gray-400 text-xs mt-12 py-4 border-t border-gray-200">
+        <p>&copy; 2026 Toko Serba 5K. All Rights Reserved.</p>
+        <button onclick="bukaLoginAdmin()" class="mt-2 text-gray-300 hover:text-gray-500 cursor-pointer">Mode Admin</button>
+    </footer>
+
+    <!-- POPUP LOGIN ADMIN -->
+    <div id="modal-admin-login" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
+            <h3 class="text-lg font-bold mb-4">Masuk Mode Admin</h3>
+            <input type="password" id="admin-password" placeholder="Masukkan Password Admin" class="w-full border p-2 rounded mb-4 focus:outline-red-600">
+            <div class="flex justify-end gap-2">
+                <button onclick="tutupModal('modal-admin-login')" class="bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer">Batal</button>
+                <button onclick="verifikasiAdmin()" class="bg-red-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL MANAGEMEN ADMIN (Hanya muncul jika sukses login) -->
+    <div id="panel-admin" class="fixed bottom-0 inset-x-0 bg-white shadow-2xl border-t-2 border-red-600 p-4 hidden max-h-[80vh] overflow-y-auto z-40">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
+            <!-- Form Tambah Produk -->
+            <div class="flex-1">
+                <h3 class="text-base font-bold text-red-600 mb-3">➕ Tambah Produk Baru</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="text" id="p-nama" placeholder="Nama Produk" class="border p-2 rounded text-sm">
+                    <input type="text" id="p-kategori" placeholder="Kategori (Contoh: Makanan, Alat Tulis)" class="border p-2 rounded text-sm">
+                    <input type="text" id="p-foto" placeholder="Link Foto/Gambar Produk" class="border p-2 rounded text-sm">
+                    <input type="number" id="p-diskon" placeholder="Harga Diskon (kosongkan jika tidak diskon)" class="border p-2 rounded text-sm" min="0" step="500">
+                    <small class="text-gray-400 sm:col-span-2 text-[11px]">Tips foto: Gunakan link dari internet atau upload dulu ke web gratis seperti ImgBB, lalu masukkan link gambarnya di sini.</small>
+                    <small class="text-gray-400 sm:col-span-2 text-[11px]">Tips diskon: Isi harga diskon (misal 3000) kalau produk ini mau dijual lebih murah dari Rp 5.000. Kosongkan kalau harga normal.</small>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button onclick="tambahProduk()" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Simpan Produk</button>
+                    <button onclick="keluarAdmin()" class="bg-gray-500 text-white px-4 py-2 rounded text-sm cursor-pointer">Keluar Mode Admin</button>
+                </div>
+                <p class="text-[11px] text-amber-600 mt-3">⚠️ Catatan: di versi pratinjau ini, produk yang ditambah/dihapus hanya tersimpan selama sesi berjalan (tidak permanen). Saat file di-download dan dibuka sebagai halaman web sungguhan, gunakan localStorage seperti aslinya, atau simpan ke server/database agar datanya permanen.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIKA UTAMA -->
+    <script>
+        // Password default admin silakan diganti sesuai keinginan
+        const PASSWORD_ADMIN = "admin5k";
+
+        // Harga normal semua produk
+        const HARGA_NORMAL = 5000;
+
+        // Etalase masih kosong, produk & foto akan ditambahkan lewat Mode Admin.
+        const defaultProduk = [];
+
+        // Catatan: artifact ini berjalan di lingkungan tanpa localStorage,
+        // jadi data produk disimpan di variabel biasa (in-memory) selama sesi.
+        let daftarProduk = [...defaultProduk];
+        let modeAdminAktif = false;
+        let kategoriSekarang = "Semua";
+
+        // Nomor WhatsApp tujuan pesanan (Ganti dengan nomor tokomu, gunakan kode negara 62)
+        const NOMOR_WA = "6281234567890";
+
+        // 1. Fungsi menampilkan produk ke halaman web
+        function renderProduk() {
+            const container = document.getElementById('product-container');
+            container.innerHTML = '';
+
+            const produkDifilter = kategoriSekarang === "Semua"
+                ? daftarProduk
+                : daftarProduk.filter(p => p.kategori.toLowerCase() === kategoriSekarang.toLowerCase());
+
+            if (produkDifilter.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-8">Belum ada produk di kategori ini.</p>`;
+                renderFilterKategori();
+                return;
+            }
+
+            produkDifilter.forEach(produk => {
+                const card = document.createElement('div');
+                card.className = "product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between";
+
+                const tombolHapusAdmin = modeAdminAktif
+                    ? `<button onclick="hapusProduk(${produk.id})" class="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full text-xs shadow hover:bg-red-700 cursor-pointer">✕ Hapus</button>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="relative bg-gray-100 aspect-square w-full">
+                        <img src="${produk.foto || 'https://placehold.co/300'}" alt="${produk.nama}" class="w-full h-full object-cover">
+                        ${tombolHapusAdmin}
+                    </div>
+                    <div class="p-3 flex flex-col flex-grow justify-between">
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">${produk.kategori}</span>
+                            <h2 class="font-bold text-sm text-gray-800 line-clamp-2 mt-0.5">${produk.nama}</h2>
+                        </div>
+                        <div class="mt-3">
+                            ${produk.diskon && produk.diskon < HARGA_NORMAL
+                                ? `<div class="flex items-center gap-2">
+                                     <p class="text-gray-400 line-through text-xs">Rp ${HARGA_NORMAL.toLocaleString('id-ID')}</p>
+                                     <span class="bg-yellow-400 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded">DISKON</span>
+                                   </div>
+                                   <p class="text-red-600 font-black text-base">Rp ${produk.diskon.toLocaleString('id-ID')}</p>`
+                                : `<p class="text-red-600 font-black text-base">Rp ${HARGA_NORMAL.toLocaleString('id-ID')}</p>`
+                            }
+                            <button onclick="pesanPencet('${produk.nama.replace(/'/g, "\\'")}', ${produk.diskon && produk.diskon < HARGA_NORMAL ? produk.diskon : HARGA_NORMAL})" class="w-full mt-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg transition dynamic-btn shadow-sm cursor-pointer">
+                                🛒 Beli Sekarang
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            renderFilterKategori();
+        }
+
+        // 2. Membuat tombol-tombol kategori di atas secara otomatis
+        function renderFilterKategori() {
+            const filterContainer = document.getElementById('category-filters');
+            const semuaKategori = ['Semua', ...new Set(daftarProduk.map(p => p.kategori))];
+
+            filterContainer.innerHTML = '';
+            semuaKategori.forEach(kat => {
+                const aktif = kat.toLowerCase() === kategoriSekarang.toLowerCase();
+                const btn = document.createElement('button');
+                btn.onclick = () => filterKategori(kat);
+                btn.className = `px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm shrink-0 cursor-pointer transition ${
+                    aktif ? 'bg-red-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`;
+                btn.innerText = kat;
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        function filterKategori(kategori) {
+            kategoriSekarang = kategori;
+            renderProduk();
+        }
+
+        // 3. Sistem Pembelian via WhatsApp
+        function pesanPencet(namaProduk, harga) {
+            const pesan = `Halo kak, saya mau beli produk: *${namaProduk}* (Harga Rp ${harga.toLocaleString('id-ID')}). Apakah ready?`;
+            const linkWA = `https://api.whatsapp.com/send?phone=${NOMOR_WA}&text=${encodeURIComponent(pesan)}`;
+            window.open(linkWA, '_blank');
+        }
+
+        // 4. Logika Fitur Admin (in-memory, tanpa localStorage)
+        function bukaLoginAdmin() {
+            document.getElementById('modal-admin-login').classList.remove('hidden');
+            document.getElementById('admin-password').focus();
+        }
+
+        function tutupModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function verifikasiAdmin() {
+            const inputPass = document.getElementById('admin-password').value;
+            if (inputPass === PASSWORD_ADMIN) {
+                modeAdminAktif = true;
+                tutupModal('modal-admin-login');
+                document.getElementById('panel-admin').classList.remove('hidden');
+                document.getElementById('admin-password').value = '';
+                renderProduk();
+            } else {
+                alert("Password Admin Salah!");
+            }
+        }
+
+        function keluarAdmin() {
+            modeAdminAktif = false;
+            document.getElementById('panel-admin').classList.add('hidden');
+            renderProduk();
+        }
+
+        function tambahProduk() {
+            const nama = document.getElementById('p-nama').value.trim();
+            const kategori = document.getElementById('p-kategori').value.trim() || 'Umum';
+            const foto = document.getElementById('p-foto').value.trim();
+            const diskonInput = document.getElementById('p-diskon').value.trim();
+            const diskon = diskonInput ? Number(diskonInput) : null;
+
+            if (!nama) { alert("Nama produk wajib diisi!"); return; }
+            if (diskon !== null && (isNaN(diskon) || diskon <= 0 || diskon >= HARGA_NORMAL)) {
+                alert(`Harga diskon harus lebih besar dari 0 dan lebih kecil dari Rp ${HARGA_NORMAL.toLocaleString('id-ID')}.`);
+                return;
+            }
+
+            const produkBaru = {
+                id: Date.now(),
+                nama: nama,
+                kategori: kategori,
+                foto: foto,
+                diskon: diskon
+            };
+
+            daftarProduk.push(produkBaru);
+
+            document.getElementById('p-nama').value = '';
+            document.getElementById('p-kategori').value = '';
+            document.getElementById('p-foto').value = '';
+            document.getElementById('p-diskon').value = '';
+
+            renderProduk();
+        }
+
+        function hapusProduk(id) {
+            daftarProduk = daftarProduk.filter(p => p.id !== id);
+            renderProduk();
+        }
+
+        // Jalankan render pertama kali saat website dibuka
+        renderProduk();
+    </script>
+</body>
+</html>
