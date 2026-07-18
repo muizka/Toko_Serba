@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog Serba 5K</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .product-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans pb-20">
+
+    <header class="bg-red-600 text-white text-center py-8 px-4 shadow-md">
+        <h1 class="text-3xl font-bold tracking-wide">📦 TOKO SERBA 5.000</h1>
+        <p class="text-sm mt-2 opacity-90">Semua Produk Rp 5.000, Ada yang Diskon Juga! Tanpa Ribet, Langsung Pilih & Pesan.</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 mt-6">
+        <div class="flex gap-2 overflow-x-auto pb-3 mb-6" id="category-filters"></div>
+        <div id="product-container" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    </main>
+
+    <footer class="text-center text-gray-400 text-xs mt-12 py-4 border-t border-gray-200">
+        <p>&copy; 2026 Toko Serba 5K. All Rights Reserved.</p>
+        <button onclick="bukaLoginAdmin()" class="mt-2 text-gray-300 hover:text-gray-500 cursor-pointer">Mode Admin</button>
+    </footer>
+
+    <!-- POPUP DETAIL PRODUK -->
+    <div id="modal-detail" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-sm shadow-xl overflow-hidden max-h-[85vh] overflow-y-auto">
+            <img id="d-foto" src="" class="w-full aspect-square object-cover">
+            <div class="p-4">
+                <span id="d-kategori" class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold"></span>
+                <h2 id="d-nama" class="font-bold text-lg text-gray-800 mt-1"></h2>
+                <p id="d-deskripsi" class="text-sm text-gray-600 mt-2 whitespace-pre-line"></p>
+                <div id="d-harga" class="mt-3"></div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="tutupModal('modal-detail')" class="flex-1 bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer">Tutup</button>
+                    <button id="d-beli-btn" class="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 rounded-lg cursor-pointer">🛒 Beli Sekarang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP LOGIN ADMIN -->
+    <div id="modal-admin-login" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
+            <h3 class="text-lg font-bold mb-4">Masuk Mode Admin</h3>
+            <input type="password" id="admin-password" placeholder="Masukkan Password Admin" class="w-full border p-2 rounded mb-4 focus:outline-red-600">
+            <div class="flex justify-end gap-2">
+                <button onclick="tutupModal('modal-admin-login')" class="bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer">Batal</button>
+                <button onclick="verifikasiAdmin()" class="bg-red-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL ADMIN -->
+    <div id="panel-admin" class="fixed bottom-0 inset-x-0 bg-white shadow-2xl border-t-2 border-red-600 p-4 hidden max-h-[80vh] overflow-y-auto z-40">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
+            <div class="flex-1">
+                <h3 class="text-base font-bold text-red-600 mb-3">➕ Tambah Produk Baru</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="text" id="p-nama" placeholder="Nama Produk" class="border p-2 rounded text-sm">
+                    <input type="text" id="p-kategori" placeholder="Kategori (Contoh: Makanan, Digital)" class="border p-2 rounded text-sm">
+                    <input type="text" id="p-foto" placeholder="Link Foto/Gambar Produk" class="border p-2 rounded text-sm sm:col-span-2">
+                    <textarea id="p-deskripsi" placeholder="Deskripsi produk (opsional)" class="border p-2 rounded text-sm sm:col-span-2" rows="3"></textarea>
+                    <input type="number" id="p-diskon" placeholder="Harga Diskon (kosongkan jika tidak diskon)" class="border p-2 rounded text-sm sm:col-span-2" min="0" step="500">
+                    <small class="text-gray-400 sm:col-span-2 text-[11px]">Tips foto: pakai link gambar dari internet, atau upload dulu ke ImgBB lalu tempel link-nya.</small>
+                    <small class="text-gray-400 sm:col-span-2 text-[11px]">Tips diskon: isi harga diskon (misal 3000) kalau produk mau dijual lebih murah dari Rp 5.000. Kosongkan kalau harga normal.</small>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button onclick="tambahProduk()" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Simpan Produk</button>
+                    <button onclick="keluarAdmin()" class="bg-gray-500 text-white px-4 py-2 rounded text-sm cursor-pointer">Keluar Mode Admin</button>
+                </div>
+                <p class="text-[11px] text-green-600 mt-3">✅ Data sekarang tersimpan otomatis di browser ini (localStorage) — tidak hilang saat refresh.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PASSWORD_ADMIN = "admin5k";
+        const HARGA_NORMAL = 5000;
+        const NOMOR_WA = "6281234567890";
+
+        const defaultProduk = [];
+        let daftarProduk = JSON.parse(localStorage.getItem('produk_5k')) || defaultProduk;
+        let modeAdminAktif = false;
+        let kategoriSekarang = "Semua";
+
+        function simpanKeStorage() {
+            localStorage.setItem('produk_5k', JSON.stringify(daftarProduk));
+        }
+
+        function hargaAktif(produk) {
+            return (produk.diskon && produk.diskon < HARGA_NORMAL) ? produk.diskon : HARGA_NORMAL;
+        }
+
+        function renderProduk() {
+            const container = document.getElementById('product-container');
+            container.innerHTML = '';
+
+            const produkDifilter = kategoriSekarang === "Semua"
+                ? daftarProduk
+                : daftarProduk.filter(p => p.kategori.toLowerCase() === kategoriSekarang.toLowerCase());
+
+            if (produkDifilter.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-8">Belum ada produk di kategori ini.</p>`;
+                renderFilterKategori();
+                return;
+            }
+
+            produkDifilter.forEach(produk => {
+                const card = document.createElement('div');
+                card.className = "product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between cursor-pointer";
+                card.onclick = (e) => {
+                    if (e.target.closest('.hapus-btn') || e.target.closest('.beli-btn')) return;
+                    bukaDetail(produk.id);
+                };
+
+                const tombolHapusAdmin = modeAdminAktif
+                    ? `<button onclick="event.stopPropagation(); hapusProduk(${produk.id})" class="hapus-btn absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full text-xs shadow hover:bg-red-700 cursor-pointer">✕ Hapus</button>`
+                    : '';
+
+                const harga = hargaAktif(produk);
+                const adaDiskon = harga < HARGA_NORMAL;
+
+                card.innerHTML = `
+                    <div class="relative bg-gray-100 aspect-square w-full">
+                        <img src="${produk.foto || 'https://placehold.co/300'}" alt="${produk.nama}" class="w-full h-full object-cover">
+                        ${tombolHapusAdmin}
+                    </div>
+                    <div class="p-3 flex flex-col flex-grow justify-between">
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">${produk.kategori}</span>
+                            <h2 class="font-bold text-sm text-gray-800 line-clamp-2 mt-0.5">${produk.nama}</h2>
+                        </div>
+                        <div class="mt-3">
+                            ${adaDiskon
+                                ? `<div class="flex items-center gap-2">
+                                     <p class="text-gray-400 line-through text-xs">Rp ${HARGA_NORMAL.toLocaleString('id-ID')}</p>
+                                     <span class="bg-yellow-400 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded">DISKON</span>
+                                   </div>
+                                   <p class="text-red-600 font-black text-base">Rp ${harga.toLocaleString('id-ID')}</p>`
+                                : `<p class="text-red-600 font-black text-base">Rp ${HARGA_NORMAL.toLocaleString('id-ID')}</p>`
+                            }
+                            <button onclick="event.stopPropagation(); pesanPencet('${produk.nama.replace(/'/g, "\\'")}', ${harga})" class="beli-btn w-full mt-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg transition shadow-sm cursor-pointer">
+                                🛒 Beli Sekarang
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            renderFilterKategori();
+        }
+
+        function renderFilterKategori() {
+            const filterContainer = document.getElementById('category-filters');
+            const semuaKategori = ['Semua', ...new Set(daftarProduk.map(p => p.kategori))];
+            filterContainer.innerHTML = '';
+            semuaKategori.forEach(kat => {
+                const aktif = kat.toLowerCase() === kategoriSekarang.toLowerCase();
+                const btn = document.createElement('button');
+                btn.onclick = () => filterKategori(kat);
+                btn.className = `px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm shrink-0 cursor-pointer transition ${aktif ? 'bg-red-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`;
+                btn.innerText = kat;
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        function filterKategori(kategori) {
+            kategoriSekarang = kategori;
+            renderProduk();
+        }
+
+        function bukaDetail(id) {
+            const produk = daftarProduk.find(p => p.id === id);
+            if (!produk) return;
+            const harga = hargaAktif(produk);
+            const adaDiskon = harga < HARGA_NORMAL;
+
+            document.getElementById('d-foto').src = produk.foto || 'https://placehold.co/300';
+            document.getElementById('d-kategori').innerText = produk.kategori;
+            document.getElementById('d-nama').innerText = produk.nama;
+            document.getElementById('d-deskripsi').innerText = produk.deskripsi || 'Belum ada deskripsi untuk produk ini.';
+            document.getElementById('d-harga').innerHTML = adaDiskon
+                ? `<div class="flex items-center gap-2">
+                     <p class="text-gray-400 line-through text-xs">Rp ${HARGA_NORMAL.toLocaleString('id-ID')}</p>
+                     <span class="bg-yellow-400 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded">DISKON</span>
+                   </div>
+                   <p class="text-red-600 font-black text-xl">Rp ${harga.toLocaleString('id-ID')}</p>`
+                : `<p class="text-red-600 font-black text-xl">Rp ${HARGA_NORMAL.toLocaleString('id-ID')}</p>`;
+            document.getElementById('d-beli-btn').onclick = () => pesanPencet(produk.nama, harga);
+
+            document.getElementById('modal-detail').classList.remove('hidden');
+            document.getElementById('modal-detail').classList.add('flex');
+        }
+
+        function pesanPencet(namaProduk, harga) {
+            const pesan = `Halo kak, saya mau beli produk: *${namaProduk}* (Harga Rp ${harga.toLocaleString('id-ID')}). Apakah ready?`;
+            const linkWA = `https://api.whatsapp.com/send?phone=${NOMOR_WA}&text=${encodeURIComponent(pesan)}`;
+            window.open(linkWA, '_blank');
+        }
+
+        function bukaLoginAdmin() {
+            document.getElementById('modal-admin-login').classList.remove('hidden');
+            document.getElementById('modal-admin-login').classList.add('flex');
+            document.getElementById('admin-password').focus();
+        }
+
+        function tutupModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function verifikasiAdmin() {
+            const inputPass = document.getElementById('admin-password').value;
+            if (inputPass === PASSWORD_ADMIN) {
+                modeAdminAktif = true;
+                tutupModal('modal-admin-login');
+                document.getElementById('panel-admin').classList.remove('hidden');
+                document.getElementById('admin-password').value = '';
+                renderProduk();
+            } else {
+                alert("Password Admin Salah!");
+            }
+        }
+
+        function keluarAdmin() {
+            modeAdminAktif = false;
+            document.getElementById('panel-admin').classList.add('hidden');
+            renderProduk();
+        }
+
+        function tambahProduk() {
+            const nama = document.getElementById('p-nama').value.trim();
+            const kategori = document.getElementById('p-kategori').value.trim() || 'Umum';
+            const foto = document.getElementById('p-foto').value.trim();
+            const deskripsi = document.getElementById('p-deskripsi').value.trim();
+            const diskonInput = document.getElementById('p-diskon').value.trim();
+            const diskon = diskonInput ? Number(diskonInput) : null;
+
+            if (!nama) { alert("Nama produk wajib diisi!"); return; }
+            if (diskon !== null && (isNaN(diskon) || diskon <= 0 || diskon >= HARGA_NORMAL)) {
+                alert(`Harga diskon harus lebih besar dari 0 dan lebih kecil dari Rp ${HARGA_NORMAL.toLocaleString('id-ID')}.`);
+                return;
+            }
+
+            daftarProduk.push({
+                id: Date.now(),
+                nama, kategori, foto, deskripsi, diskon
+            });
+            simpanKeStorage();
+
+            document.getElementById('p-nama').value = '';
+            document.getElementById('p-kategori').value = '';
+            document.getElementById('p-foto').value = '';
+            document.getElementById('p-deskripsi').value = '';
+            document.getElementById('p-diskon').value = '';
+
+            renderProduk();
+        }
+
+        function hapusProduk(id) {
+            daftarProduk = daftarProduk.filter(p => p.id !== id);
+            simpanKeStorage();
+            renderProduk();
+        }
+
+        renderProduk();
+    </script>
+</body>
+</html>
