@@ -88,6 +88,7 @@
         const HARGA_NORMAL = 5000;
         const NOMOR_WA = "6281234567890";
 
+        // KONEKSI SUPABASE KAMU
         const SUPABASE_URL = "https://kfapxeuayyahplmutjrb.supabase.co";
         const SUPABASE_KEY = "sb_publishable_QabEMXUJWqWPDpq7jD2PIg_U1u5Y0jX";
 
@@ -364,7 +365,6 @@
             } catch (e) {
                 console.error(e);
                 alert("Gagal menghapus produk. Periksa koneksi internet kamu.");
-                return;
             }
 
             await muatDariStorage();
