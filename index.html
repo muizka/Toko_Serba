@@ -10,7 +10,7 @@
         .product-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans pb-20">
+<body class="bg-gray-50 text-gray-800 font-sans pb-32">
 
     <header class="bg-blue-600 text-white text-center py-8 px-4 shadow-md">
         <h1 class="text-3xl font-bold tracking-wide">📦 TOKO SERBA 5.000</h1>
@@ -45,37 +45,37 @@
     </div>
 
     <!-- POPUP LOGIN ADMIN -->
-    <div id="modal-admin-login" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
+    <div id="modal-admin-login" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <form onsubmit="verifikasiAdmin(event)" class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <h3 class="text-lg font-bold mb-4">Masuk Mode Admin</h3>
             <input type="password" id="admin-password" placeholder="Masukkan Password Admin" class="w-full border p-2 rounded mb-4 focus:outline-blue-600">
             <div class="flex justify-end gap-2">
-                <button onclick="tutupModal('modal-admin-login')" class="bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer">Batal</button>
-                <button onclick="verifikasiAdmin()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Masuk</button>
+                <button type="button" onclick="tutupModal('modal-admin-login')" class="bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer">Batal</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer hover:bg-blue-700">Masuk</button>
             </div>
-        </div>
+        </form>
     </div>
 
-    <!-- PANEL ADMIN -->
-    <div id="panel-admin" class="bg-white shadow-2xl border-t-2 border-yellow-400 p-4 hidden">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
-            <div class="flex-1">
-                <h3 class="text-base font-bold text-blue-600 mb-3">➕ Tambah Produk Baru</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="text" id="p-nama" placeholder="Nama Produk" class="border p-2 rounded text-sm">
-                    <input type="text" id="p-kategori" placeholder="Kategori (Contoh: Makanan, Digital)" class="border p-2 rounded text-sm">
-                    <input type="text" id="p-foto" placeholder="Link Foto/Gambar Produk" class="border p-2 rounded text-sm sm:col-span-2">
-                    <textarea id="p-deskripsi" placeholder="Deskripsi produk (opsional)" class="border p-2 rounded text-sm sm:col-span-2" rows="3"></textarea>
-                    <input type="number" id="p-diskon" placeholder="Harga Diskon (kosongkan jika tidak diskon)" class="border p-2 rounded text-sm sm:col-span-2" min="0" step="500">
-                    <small class="text-gray-400 sm:col-span-2 text-[11px]">Tips foto: pakai link gambar dari internet, atau upload dulu ke ImgBB lalu tempel link-nya.</small>
-                    <small class="text-gray-400 sm:col-span-2 text-[11px]">Tips diskon: isi harga diskon (misal 3000) kalau produk mau dijual lebih murah dari Rp 5.000. Kosongkan kalau harga normal.</small>
-                </div>
-                <div class="mt-3 flex gap-2">
-                    <button onclick="tambahProduk()" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Simpan Produk</button>
-                    <button onclick="keluarAdmin()" class="bg-gray-500 text-white px-4 py-2 rounded text-sm cursor-pointer">Keluar Mode Admin</button>
-                </div>
-                <p class="text-[11px] text-green-600 mt-3">✅ Data tersimpan permanen di database (Supabase) — langsung terlihat oleh semua pengunjung, dari device manapun.</p>
+    <!-- PANEL ADMIN (STUCK DI BAWAH/FLOATING AGAR MUDAH DIAKSES) -->
+    <div id="panel-admin" class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.15)] border-t-4 border-yellow-400 p-4 hidden z-40 max-h-[80vh] overflow-y-auto">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-3 border-b pb-2">
+                <h3 class="text-base font-bold text-blue-600">➕ Dashboard Admin (Tambah Produk)</h3>
+                <button onclick="keluarAdmin()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded cursor-pointer font-semibold">Keluar Admin</button>
             </div>
+            
+            <form onsubmit="tambahProduk(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text" id="p-nama" placeholder="Nama Produk *" required class="border p-2 rounded text-sm focus:outline-blue-600">
+                <input type="text" id="p-kategori" placeholder="Kategori (Default: Umum)" class="border p-2 rounded text-sm focus:outline-blue-600">
+                <input type="url" id="p-foto" placeholder="URL Foto Produk (https://...)" class="border p-2 rounded text-sm sm:col-span-2 focus:outline-blue-600">
+                <textarea id="p-deskripsi" placeholder="Deskripsi produk (opsional)" class="border p-2 rounded text-sm sm:col-span-2 focus:outline-blue-600" rows="2"></textarea>
+                <input type="number" id="p-diskon" placeholder="Harga Diskon (Opsional, < 5000)" class="border p-2 rounded text-sm sm:col-span-2 focus:outline-blue-600" min="0" max="4999" step="500">
+                
+                <div class="sm:col-span-2 flex justify-between items-center mt-2">
+                    <span class="text-[11px] text-green-600">✅ Data langsung tersimpan di Supabase.</span>
+                    <button type="submit" id="btn-simpan" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded text-sm font-semibold cursor-pointer">Simpan Produk</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -84,7 +84,6 @@
         const HARGA_NORMAL = 5000;
         const NOMOR_WA = "6281234567890";
 
-        // Ganti dengan URL & Publishable Key project Supabase kamu sendiri
         const SUPABASE_URL = "https://kfapxeuayyahplmutjrb.supabase.co";
         const SUPABASE_KEY = "sb_publishable_QabEMXUJWqWPDpq7jD2PIg_U1u5Y0jX";
 
@@ -158,14 +157,14 @@
 
             produkDifilter.forEach(produk => {
                 const card = document.createElement('div');
-                card.className = "product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between cursor-pointer";
+                card.className = "product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between cursor-pointer relative";
                 card.onclick = (e) => {
                     if (e.target.closest('.hapus-btn') || e.target.closest('.beli-btn')) return;
                     bukaDetail(produk.id);
                 };
 
                 const tombolHapusAdmin = modeAdminAktif
-                    ? `<button onclick="event.stopPropagation(); hapusProduk(${produk.id})" class="hapus-btn absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full text-xs shadow hover:bg-blue-700 cursor-pointer">✕ Hapus</button>`
+                    ? `<button onclick="event.stopPropagation(); hapusProduk(${produk.id}, '${produk.nama.replace(/'/g, "\\'")}')" class="hapus-btn absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded shadow cursor-pointer font-bold z-10">✕ Hapus</button>`
                     : '';
 
                 const harga = hargaAktif(produk);
@@ -253,6 +252,7 @@
         function bukaLoginAdmin() {
             document.getElementById('modal-admin-login').classList.remove('hidden');
             document.getElementById('modal-admin-login').classList.add('flex');
+            document.getElementById('admin-password').value = '';
             document.getElementById('admin-password').focus();
         }
 
@@ -261,13 +261,13 @@
             document.getElementById(id).classList.remove('flex');
         }
 
-        function verifikasiAdmin() {
+        function verifikasiAdmin(e) {
+            if(e) e.preventDefault();
             const inputPass = document.getElementById('admin-password').value;
             if (inputPass === PASSWORD_ADMIN) {
                 modeAdminAktif = true;
                 tutupModal('modal-admin-login');
                 document.getElementById('panel-admin').classList.remove('hidden');
-                document.getElementById('admin-password').value = '';
                 renderProduk();
             } else {
                 alert("Password Admin Salah!");
@@ -280,12 +280,15 @@
             renderProduk();
         }
 
-        async function tambahProduk() {
+        async function tambahProduk(e) {
+            if(e) e.preventDefault();
+
             if (supabaseGagalDimuat || !supabase) {
                 alert("Koneksi ke database gagal. Coba refresh halaman dan pastikan internet kamu aktif.");
                 return;
             }
 
+            const btnSimpan = document.getElementById('btn-simpan');
             const nama = document.getElementById('p-nama').value.trim();
             const kategori = document.getElementById('p-kategori').value.trim() || 'Umum';
             const foto = document.getElementById('p-foto').value.trim();
@@ -300,31 +303,41 @@
             }
 
             try {
+                btnSimpan.innerText = "Menyimpan...";
+                btnSimpan.disabled = true;
+
                 const { error } = await supabase
                     .from('Produk')
                     .insert([{ nama, kategori, foto, deskripsi, diskon }]);
 
                 if (error) {
                     console.error(error);
-                    alert("Gagal menyimpan produk ke server. Coba lagi.");
+                    alert("Gagal menyimpan produk ke server: " + error.message);
                     return;
                 }
+
+                // Reset Form
+                document.getElementById('p-nama').value = '';
+                document.getElementById('p-kategori').value = '';
+                document.getElementById('p-foto').value = '';
+                document.getElementById('p-deskripsi').value = '';
+                document.getElementById('p-diskon').value = '';
+
+                await muatDariStorage();
             } catch (e) {
                 console.error(e);
                 alert("Gagal menyimpan produk. Periksa koneksi internet kamu.");
+            } finally {
+                btnSimpan.innerText = "Simpan Produk";
+                btnSimpan.disabled = false;
+            }
+        }
+
+        async function hapusProduk(id, namaProduk) {
+            if (!confirm(`Apakah Anda yakin ingin menghapus produk "${namaProduk}"?`)) {
                 return;
             }
 
-            document.getElementById('p-nama').value = '';
-            document.getElementById('p-kategori').value = '';
-            document.getElementById('p-foto').value = '';
-            document.getElementById('p-deskripsi').value = '';
-            document.getElementById('p-diskon').value = '';
-
-            await muatDariStorage();
-        }
-
-        async function hapusProduk(id) {
             if (supabaseGagalDimuat || !supabase) {
                 alert("Koneksi ke database gagal. Coba refresh halaman dan pastikan internet kamu aktif.");
                 return;
@@ -338,7 +351,7 @@
 
                 if (error) {
                     console.error(error);
-                    alert("Gagal menghapus produk. Coba lagi.");
+                    alert("Gagal menghapus produk: " + error.message);
                     return;
                 }
             } catch (e) {
