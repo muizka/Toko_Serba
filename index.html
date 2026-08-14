@@ -4,30 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katalog Serba 5K</title>
-    <!-- Tailwind CSS CDN Stabil -->
+
+    <!-- Panggil CDN Library di Head -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
-        .product-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-3px); transition: all 0.3s ease; }
+        button, a { touch-action: manipulation; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans pb-32 min-h-screen flex flex-col">
+<body class="bg-gray-50 text-gray-800 font-sans pb-36 min-h-screen flex flex-col relative">
 
+    <!-- HEADER -->
     <header class="bg-blue-600 text-white text-center py-8 px-4 shadow-md">
         <h1 class="text-3xl font-bold tracking-wide">📦 TOKO SERBA 5.000</h1>
         <p class="text-sm mt-2 opacity-90">Semua Produk Rp 5.000, Ada yang Diskon Juga! Tanpa Ribet, Langsung Pilih & Pesan.</p>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main class="max-w-6xl mx-auto px-4 mt-6 flex-grow w-full">
         <div class="flex gap-2 overflow-x-auto pb-3 mb-6" id="category-filters"></div>
         <div id="product-container" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
     </main>
 
-    <!-- FOOTER DENGAN TERIMPA LAYER LEBIH TINGGI & TOUCH TARGET DIPERBESAR -->
+    <!-- FOOTER -->
     <footer class="text-center text-gray-400 text-xs mt-12 py-8 border-t border-gray-200 bg-white relative z-30">
         <p>&copy; 2026 Toko Serba 5K. All Rights Reserved.</p>
         <div class="mt-4">
-            <button id="btn-mode-admin" type="button" onclick="bukaLoginAdmin(event)" class="inline-block bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 px-5 py-2.5 rounded-lg font-bold text-xs cursor-pointer active:scale-95 transition shadow-sm">
+            <button id="btn-mode-admin" type="button" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold text-xs cursor-pointer shadow-md active:scale-95 transition">
                 🔒 Masuk Mode Admin
             </button>
         </div>
@@ -51,18 +56,20 @@
     </div>
 
     <!-- POPUP LOGIN ADMIN -->
-    <div id="modal-admin-login" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-        <form onsubmit="verifikasiAdmin(event)" class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
-            <h3 class="text-lg font-bold mb-4">Masuk Mode Admin</h3>
-            <input type="password" id="admin-password" placeholder="Masukkan Password Admin" class="w-full border p-2 rounded mb-4 focus:outline-blue-600 text-sm">
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="tutupModal('modal-admin-login')" class="bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer">Batal</button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Masuk</button>
-            </div>
-        </form>
+    <div id="modal-admin-login" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-[100]">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Masuk Mode Admin</h3>
+            <form id="form-login-admin">
+                <input type="password" id="admin-password" placeholder="Masukkan Password Admin" class="w-full border border-gray-300 p-2.5 rounded mb-4 focus:outline-blue-600 text-sm">
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="tutupModal('modal-admin-login')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm cursor-pointer font-medium">Batal</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer">Masuk</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- PANEL ADMIN FLOATING -->
+    <!-- PANEL DASHBOARD ADMIN FLOATING BANNER -->
     <div id="panel-admin" class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.15)] border-t-4 border-yellow-400 p-4 hidden z-40 max-h-[80vh] overflow-y-auto">
         <div class="max-w-4xl mx-auto">
             <div class="flex justify-between items-center mb-3 border-b pb-2">
@@ -85,6 +92,7 @@
         </div>
     </div>
 
+    <!-- LOGIC JAVASCRIPT -->
     <script>
         const PASSWORD_ADMIN = "admin5k";
         const HARGA_NORMAL = 5000;
@@ -94,27 +102,23 @@
         const SUPABASE_KEY = "sb_publishable_QabEMXUJWqWPDpq7jD2PIg_U1u5Y0jX";
 
         let supabase = null;
-        let supabaseGagalDimuat = false;
+
         try {
             if (window.supabase && typeof window.supabase.createClient === 'function') {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            } else {
-                supabaseGagalDimuat = true;
             }
         } catch (e) {
-            console.error('Gagal inisialisasi Supabase:', e);
-            supabaseGagalDimuat = true;
+            console.error('Gagal memuat Supabase:', e);
         }
 
         let daftarProduk = [];
         let modeAdminAktif = false;
         let kategoriSekarang = "Semua";
-        let dataSudahDimuat = false;
 
         async function muatDariStorage() {
-            if (supabaseGagalDimuat || !supabase) {
-                const container = document.getElementById('product-container');
-                container.innerHTML = `<p class="col-span-full text-center text-red-500 py-8 px-4">⚠️ Gagal memuat koneksi database. Coba refresh halaman.</p>`;
+            if (!supabase) {
+                document.getElementById('product-container').innerHTML = 
+                    `<p class="col-span-full text-center text-red-500 py-8">⚠️ Database belum terhubung. Periksa koneksi internet.</p>`;
                 return;
             }
 
@@ -124,17 +128,12 @@
                     .select('*')
                     .order('id', { ascending: false });
 
-                if (error) {
-                    console.error(error);
-                    daftarProduk = [];
-                } else {
-                    daftarProduk = data;
-                }
+                if (error) throw error;
+                daftarProduk = data || [];
             } catch (e) {
-                console.error('Gagal memuat produk:', e);
+                console.error(e);
                 daftarProduk = [];
             }
-            dataSudahDimuat = true;
             renderProduk();
         }
 
@@ -146,17 +145,12 @@
             const container = document.getElementById('product-container');
             container.innerHTML = '';
 
-            if (!dataSudahDimuat) {
-                container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-8">Memuat produk...</p>`;
-                return;
-            }
-
             const produkDifilter = kategoriSekarang === "Semua"
                 ? daftarProduk
                 : daftarProduk.filter(p => p.kategori && p.kategori.toLowerCase() === kategoriSekarang.toLowerCase());
 
             if (produkDifilter.length === 0) {
-                container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-8">Belum ada produk di kategori ini.</p>`;
+                container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-8">Belum ada produk.</p>`;
                 renderFilterKategori();
                 return;
             }
@@ -215,16 +209,11 @@
                 const aktif = kat.toLowerCase() === kategoriSekarang.toLowerCase();
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.onclick = () => filterKategori(kat);
+                btn.onclick = () => { kategoriSekarang = kat; renderProduk(); };
                 btn.className = `px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm shrink-0 cursor-pointer transition ${aktif ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`;
                 btn.innerText = kat;
                 filterContainer.appendChild(btn);
             });
-        }
-
-        function filterKategori(kategori) {
-            kategoriSekarang = kategori;
-            renderProduk();
         }
 
         function bukaDetail(id) {
@@ -252,24 +241,23 @@
 
         function pesanPencet(namaProduk, harga) {
             const pesan = `Halo kak, saya mau beli produk: *${namaProduk}* (Harga Rp ${harga.toLocaleString('id-ID')}). Apakah ready?`;
-            const linkWA = `https://api.whatsapp.com/send?phone=${NOMOR_WA}&text=${encodeURIComponent(pesan)}`;
-            window.open(linkWA, '_blank');
+            window.open(`https://api.whatsapp.com/send?phone=${NOMOR_WA}&text=${encodeURIComponent(pesan)}`, '_blank');
         }
 
-        // FUNGSI UTAMA DIPERBAIKI UNTUK EVENT HANDLER SENSITIF
-        function bukaLoginAdmin(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+        // FUNGSI BUKA MODAL LOGIN ADMIN
+        function panggilModalAdmin() {
             const modal = document.getElementById('modal-admin-login');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.getElementById('admin-password').value = '';
-            setTimeout(() => {
-                const input = document.getElementById('admin-password');
-                if (input) input.focus();
-            }, 100);
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                const pwdInput = document.getElementById('admin-password');
+                if (pwdInput) {
+                    pwdInput.value = '';
+                    pwdInput.focus();
+                }
+            } else {
+                alert("Elemen login admin tidak ditemukan.");
+            }
         }
 
         function tutupModal(id) {
@@ -295,17 +283,14 @@
 
         function keluarAdmin() {
             modeAdminAktif = false;
+            document.getElementById('panel-admin').classList.hidden = true;
             document.getElementById('panel-admin').classList.add('hidden');
             renderProduk();
         }
 
         async function tambahProduk(e) {
             if (e) e.preventDefault();
-
-            if (supabaseGagalDimuat || !supabase) {
-                alert("Koneksi ke database gagal. Coba refresh halaman.");
-                return;
-            }
+            if (!supabase) { alert("Koneksi Supabase bermasalah."); return; }
 
             const btnSimpan = document.getElementById('btn-simpan');
             const nama = document.getElementById('p-nama').value.trim();
@@ -316,10 +301,6 @@
             const diskon = diskonInput ? Number(diskonInput) : null;
 
             if (!nama) { alert("Nama produk wajib diisi!"); return; }
-            if (diskon !== null && (isNaN(diskon) || diskon <= 0 || diskon >= HARGA_NORMAL)) {
-                alert(`Harga diskon harus lebih besar dari 0 dan lebih kecil dari Rp ${HARGA_NORMAL.toLocaleString('id-ID')}.`);
-                return;
-            }
 
             try {
                 btnSimpan.innerText = "Menyimpan...";
@@ -329,11 +310,7 @@
                     .from('Produk')
                     .insert([{ nama, kategori, foto, deskripsi, diskon }]);
 
-                if (error) {
-                    console.error(error);
-                    alert("Gagal menyimpan produk: " + error.message);
-                    return;
-                }
+                if (error) throw error;
 
                 document.getElementById('p-nama').value = '';
                 document.getElementById('p-kategori').value = '';
@@ -342,9 +319,8 @@
                 document.getElementById('p-diskon').value = '';
 
                 await muatDariStorage();
-            } catch (e) {
-                console.error(e);
-                alert("Gagal menyimpan produk. Periksa koneksi internet kamu.");
+            } catch (err) {
+                alert("Gagal simpan: " + err.message);
             } finally {
                 btnSimpan.innerText = "Simpan Produk";
                 btnSimpan.disabled = false;
@@ -352,43 +328,32 @@
         }
 
         async function hapusProduk(id, namaProduk) {
-            if (!confirm(`Apakah Anda yakin ingin menghapus produk "${namaProduk}"?`)) {
-                return;
-            }
-
-            if (supabaseGagalDimuat || !supabase) {
-                alert("Koneksi ke database gagal. Coba refresh halaman.");
-                return;
-            }
+            if (!confirm(`Hapus "${namaProduk}"?`)) return;
+            if (!supabase) return;
 
             try {
-                const { error } = await supabase
-                    .from('Produk')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) {
-                    console.error(error);
-                    alert("Gagal menghapus produk: " + error.message);
-                    return;
-                }
-            } catch (e) {
-                console.error(e);
-                alert("Gagal menghapus produk. Periksa koneksi internet kamu.");
+                const { error } = await supabase.from('Produk').delete().eq('id', id);
+                if (error) throw error;
+                await muatDariStorage();
+            } catch (err) {
+                alert("Gagal hapus: " + err.message);
             }
-
-            await muatDariStorage();
         }
 
-        // Pasang Event Listener Cadangan saat DOM Siap
+        // PEMASANGAN BINDING EVENT SENTUHAN HP
         document.addEventListener('DOMContentLoaded', () => {
             const btnAdmin = document.getElementById('btn-mode-admin');
             if (btnAdmin) {
-                btnAdmin.addEventListener('click', bukaLoginAdmin);
+                btnAdmin.addEventListener('click', panggilModalAdmin);
             }
-        });
 
-        muatDariStorage();
+            const formLogin = document.getElementById('form-login-admin');
+            if (formLogin) {
+                formLogin.addEventListener('submit', verifikasiAdmin);
+            }
+
+            muatDariStorage();
+        });
     </script>
 </body>
 </html>
